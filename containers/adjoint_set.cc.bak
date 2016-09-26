@@ -1,0 +1,14 @@
+#include "adjoint_set.h"
+#include <iostream>
+void AdjointSet::print() {
+    for (size_t cid = 0; cid < k; cid++) {
+        if (!empty(cid)) {
+            size_t vid = first[cid];
+            while (vid != NONE) {
+                std::cout << vid << " ";
+                vid = next(vid);
+            }
+            std::cout << std::endl;
+        }
+    }
+}
