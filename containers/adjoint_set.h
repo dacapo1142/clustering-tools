@@ -118,13 +118,12 @@ class AdjointSet {
     }
 
     void move(size_t vid, size_t cid) {
-        if (which_cluster[vid] == cid) {
+        size_t old_cid = which_cluster[vid];
+        if (old_cid == cid) {
             return;
         }
-        size_t old_cid = which_cluster[vid];
         which_cluster[vid] = cid;
         size[old_cid]--;
-        size[cid]++;
         size_t prev_id = data[vid].prev_id;
         size_t next_id = data[vid].next_id;
         if (prev_id != NONE) {
@@ -137,10 +136,14 @@ class AdjointSet {
         } else {
             last[old_cid] = prev_id;
         }
-        data[vid].next_id = NONE;
-        data[vid].prev_id = last[cid];
-        data[last[cid]].next_id = vid;
-        last[cid] = vid;
+
+        // need to be fixed
+        // size[cid]++;
+        // data[vid].next_id = NONE;
+        // data[vid].prev_id = last[cid];
+        // data[last[cid]].next_id = vid;
+        // last[cid] = vid;
+        insert(vid, cid);
     }
 };
 
