@@ -1,10 +1,14 @@
 function [ collections ] = ksetsplus(g, n, k, varargin)
-pnames={'measure','verbose'};
-dflts={'cohesion',false};
-[measure, vervose]=internal.stats.parseArgs(pnames, dflts, varargin{:});
+pnames={'measure','verbose', 'which_cluster'};
+dflts={'cohesion',false,[]};
+[measure, vervose, which_cluster]=internal.stats.parseArgs(pnames, dflts, varargin{:});
 
 addpath('containers');
-collections=AdjointSet(n,k,[1,2,2,1]);
+if which_cluster
+    collections=AdjointSet(n,k,which_cluster);
+else
+    collections=AdjointSet(n,k);
+end
 iter_order=1:n;
 changed=true;
 while changed
@@ -20,7 +24,6 @@ while changed
             
             cluster=collections.cluster(cid);
             cluster_size=collections.csize(cid);
-            
             switch measure
                 case 'cohesion'
                     delta_distance=g(vid,vid)...
@@ -28,11 +31,11 @@ while changed
                         +1/cluster_size^2*sum(sum(g(cluster,cluster)));
                 case 'distance'
                     delta_distance=1/cluster_size^2 *...
-                        (2*sum(g(vid,cluster))...
+                        (2*cluster_size*sum(g(vid,cluster))...
                         -sum(sum(g(cluster,cluster))));
             end
             
-            if old_cid==k
+            if cid==old_cid
                 delta_distance=delta_distance*cluster_size/(cluster_size-1);
             else
                 delta_distance=delta_distance*cluster_size/(cluster_size+1);
@@ -40,7 +43,7 @@ while changed
             
             if delta_distance<min_delta_distance
                 min_delta_distance=delta_distance;
-                best_cid=k;
+                best_cid=cid;
             end
         end
         
