@@ -40,8 +40,8 @@ classdef AdjointSet<handle
             if obj.first(cid)==-1,
                 obj.first(cid)=vid;
                 obj.last(cid)=vid;
-                obj.next(cid)=-1;
-                obj.previous(cid)=-1;
+                obj.next(vid)=-1;
+                obj.previous(vid)=-1;
             else
                 last_vid=obj.last(cid);
                 obj.last(cid)=vid;
