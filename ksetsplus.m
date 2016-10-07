@@ -14,9 +14,9 @@ changed=true;
 count=0;
 
 while changed
-
+    
     count=count+1;
-
+    
     changed=false;
     for vid=iter_order
         min_adjust_distance=inf;
@@ -24,7 +24,7 @@ while changed
         if collection.csize(old_cid) ==1
             continue;
         end
-
+        
         for cid=1:k
             cluster=collection.cluster(cid);
             cluster_size=collection.csize(cid);
@@ -38,32 +38,34 @@ while changed
                         (2*sum(g(vid,cluster)/cluster_size)...
                         -sum(sum(g(cluster,cluster)))/cluster_size^2);
             end
-
+            
             if cid==old_cid
                 adjust_distance=delta_distance*cluster_size/(cluster_size-1);
             else
                 adjust_distance=delta_distance*cluster_size/(cluster_size+1);
             end
-
+            
             if adjust_distance<min_adjust_distance
                 min_adjust_distance=adjust_distance;
                 best_cid=cid;
             end
         end
-
+        
         if best_cid ~= old_cid
             collection.move(vid, best_cid);
             changed=true;
         end
     end
-    switch measure
-        case 'distance'
-            objective=0;
-            for cid=1:k
-                cluster=collection.cluster(cid);
-                csize=collection.csize(cid);
-                gss=g(cluster,cluster);
-                objective=objective+sum(gss(:))/csize;
-            end
+    if nargout>1
+        switch measure
+            case 'distance'
+                objective=0;
+                for cid=1:k
+                    cluster=collection.cluster(cid);
+                    csize=collection.csize(cid);
+                    gss=g(cluster,cluster);
+                    objective=objective+sum(gss(:))/csize;
+                end
+        end
     end
 end
