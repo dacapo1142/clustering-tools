@@ -29,31 +29,26 @@ class DisjointSets {
     DisjointSets(size_t n, size_t k, T which_cluster_begin,
                  T which_cluster_end);
     // random initial with given _seed
-    DisjointSets(size_t n, size_t k, size_t seed)
-        : _n(n), _k(k), _seed(seed), data(_n), first(_k, NONE), last(_k, NONE),
-          size(_n, 0), which_cluster(n) {
-        assert(_n != NONE);
-        random_assign();
-        initial();
-    }
-    DisjointSets(size_t n, size_t k)
-        : _n(n), _k(k),
-          _seed(std::chrono::system_clock::now().time_since_epoch().count()),
-          data(_n), first(_k, NONE), last(_k, NONE), size(_n, 0),
-          which_cluster(n) {
-        _seed = 1460625373037597;
-        assert(_n != NONE);
-        random_assign();
-        initial();
-    }
-    void initial() {
-        for (size_t vid = 0; vid < _n; vid++) {
-            size_t cid = which_cluster[vid];
-            insert(vid, cid);
-        }
-    }
-    inline bool empty(size_t cid) { return last[cid] == NONE; }
-
+    // DisjointSets(size_t n, size_t k, size_t seed)
+    //     : _n(n), _k(k), _seed(seed), data(_n), first(_k, NONE), last(_k,
+    //     NONE),
+    //       size(_n, 0), which_cluster(n) {
+    //     assert(_n != NONE);
+    //     random_assign();
+    //     initial();
+    // }
+    // DisjointSets(size_t n, size_t k)
+    //     : _n(n), _k(k),
+    //       _seed(std::chrono::system_clock::now().time_since_epoch().count()),
+    //       data(_n), first(_k, NONE), last(_k, NONE), size(_n, 0),
+    //       which_cluster(n) {
+    //     _seed = 1460625373037597;
+    //     assert(_n != NONE);
+    //     random_assign();
+    //     initial();
+    // }
+    void initial();
+    inline bool empty(size_t cid);
     inline void insert(size_t vid, size_t cid) {
         size[cid]++;
         if (empty(cid)) {

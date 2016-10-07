@@ -22,3 +22,12 @@ void DisjointSets::print() {
         }
     }
 }
+
+void DisjointSets::initial() {
+    for (size_t vid = 0; vid < _n; vid++) {
+        size_t cid = which_cluster[vid];
+        insert(vid, cid);
+    }
+}
+
+bool DisjointSets::empty(size_t cid) { return last[cid] == NONE; }
