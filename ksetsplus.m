@@ -1,17 +1,35 @@
 function [ collection, objective ] = ksetsplus(g, n, k, varargin)
 pnames={'measure','verbose', 'which_cluster'};
 dflts={'distance',false,[]};
-[measure, vervose, which_cluster]=internal.stats.parseArgs(pnames, dflts, varargin{:});
+[measure, verbose, which_cluster]=internal.stats.parseArgs(pnames, dflts, varargin{:});
 
 addpath('containers');
 if which_cluster
-    collection=AdjointSet(n,k,which_cluster);
+    collection=DisjointSets(n,k,which_cluster);
 else
-    collection=AdjointSet(n,k);
+    collection=DisjointSets(n,k);
 end
 iter_order=1:n;
 changed=true;
 count=0;
+
+if verbose
+    tic;
+    fprintf('------------------------------------------------------------------------------------\n');
+    fprintf('The function is going to display the changing of the objective value in each run.\n');
+    switch measure
+        case 'distance'
+            objective=0;
+            for cid=1:k
+                cluster=collection.cluster(cid);
+                csize=collection.csize(cid);
+                gss=g(cluster,cluster);
+                objective=objective+sum(gss(:))/csize;
+            end
+    end
+    fprintf('The original objective value is: %f\n', objective);
+    fprintf('------------------------------------------------------------------------------------\n');
+end
 
 while changed
 
@@ -56,6 +74,7 @@ while changed
             changed=true;
         end
     end
+
     switch measure
         case 'distance'
             objective=0;
@@ -66,4 +85,14 @@ while changed
                 objective=objective+sum(gss(:))/csize;
             end
     end
+    if verbose
+        fprintf('%f\n',objective);
+    end
+end
+
+if verbose
+    fprintf('------------------------------------------------------------------------------------\n');
+    time_consumption=toc;
+    fprintf('The number of iterations: %d\n', count);
+    fprintf('Time consumption: %f seconds\n', time_consumption);
 end

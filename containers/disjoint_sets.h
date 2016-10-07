@@ -149,5 +149,5 @@ class DisjointSets {
 };
 
 const size_t DisjointSets::NONE = std::numeric_limits<std::size_t>::max();
-#include "DisjointSets.cc"
+#include "disjoint_sets.cc"
 #endif
