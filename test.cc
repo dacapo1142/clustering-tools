@@ -1,4 +1,4 @@
-#include "containers/adjoint_set.h"
+#include "containers/disjoint_sets.h"
 #include <iostream>
 #include <typeinfo>
 #include <vector>
@@ -12,7 +12,7 @@ template <typename T1> void test(T1 t1, T1 t2) {
 
 int main() {
     int a[] = {1, 0, 1, 1, 2};
-    AdjointSet s(5, 3, a, a + 5);
+    DisjointSets s(5, 3, a, a + 5);
     s.print();
     vector<int> v(a, a + 5);
     test(a, a + 5);

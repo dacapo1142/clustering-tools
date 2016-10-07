@@ -1,4 +1,4 @@
-classdef AdjointSet<handle
+classdef DisjointSets<handle
     % A disjoint set of sets for clustering algorithm
     % The constructor accepts three arguments: n, k and which_cluster
     % n: The number of vertices
@@ -15,7 +15,7 @@ classdef AdjointSet<handle
         csize
     end
     methods
-        function obj = AdjointSet(n,k,which_cluster)
+        function obj = DisjointSets(n,k,which_cluster)
             obj.n=n;
             obj.k=k;
             if nargin <=2
@@ -85,7 +85,5 @@ classdef AdjointSet<handle
                 index=index+1;
             end
         end
-
-
     end
 end

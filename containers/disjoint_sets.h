@@ -1,5 +1,5 @@
-#ifndef ADJOINT_SET_H
-#define ADJOINT_SET_H
+#ifndef DISJOINT_SETS_H
+#define DISJOINT_SETS_H
 
 #include <algorithm>
 #include <cassert>
@@ -9,7 +9,7 @@
 #include <random>
 #include <vector>
 
-class AdjointSet {
+class DisjointSets {
   public:
     class Node {
       public:
@@ -26,16 +26,17 @@ class AdjointSet {
     std::vector<size_t> size;
     std::vector<size_t> which_cluster;
     template <typename T>
-    AdjointSet(size_t n, size_t k, T which_cluster_begin, T which_cluster_end);
+    DisjointSets(size_t n, size_t k, T which_cluster_begin,
+                 T which_cluster_end);
     // random initial with given _seed
-    AdjointSet(size_t n, size_t k, size_t seed)
+    DisjointSets(size_t n, size_t k, size_t seed)
         : _n(n), _k(k), _seed(seed), data(_n), first(_k, NONE), last(_k, NONE),
           size(_n, 0), which_cluster(n) {
         assert(_n != NONE);
         random_assign();
         initial();
     }
-    AdjointSet(size_t n, size_t k)
+    DisjointSets(size_t n, size_t k)
         : _n(n), _k(k),
           _seed(std::chrono::system_clock::now().time_since_epoch().count()),
           data(_n), first(_k, NONE), last(_k, NONE), size(_n, 0),
@@ -147,6 +148,6 @@ class AdjointSet {
     }
 };
 
-const size_t AdjointSet::NONE = std::numeric_limits<std::size_t>::max();
-#include "adjoint_set.cc"
+const size_t DisjointSets::NONE = std::numeric_limits<std::size_t>::max();
+#include "disjoint_sets.cc"
 #endif
