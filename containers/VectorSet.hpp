@@ -1,8 +1,8 @@
 #ifndef VECTORSET_HPP
 #define VECTORSET_HPP
+#include <cstddef>
 #include <limits>
 #include <vector>
-
 class VectorSet {
   private:
     std::vector<size_t> _list;
