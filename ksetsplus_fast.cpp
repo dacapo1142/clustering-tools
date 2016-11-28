@@ -37,51 +37,53 @@ inline double dbar_increase(double kstar_len, double &dbar, double &dtemp) {
 inline double dbar_decrease(double old_len, double &dbar, double &dtemp) {
     return pow(old_len, 2) / pow(old_len - 1, 2) * (dbar - 2 / old_len * dtemp);
 }
+//
+// void random_initialize(vector<unsigned> &which_cluster,
+//                        vector<VectorSet> &clusters, unsigned vcount,
+//                        unsigned k) {
+//     srand(unsigned(time(0)));
+//     vector<unsigned> vertice(vcount);
+//     for (unsigned vid = 0; vid < vcount; vid++) {
+//         vertice[vid] = vid;
+//     }
+//     clusters.reserve(k);
+//     for (unsigned cid = 0; cid < k; cid++) {
+//         clusters.push_back(VectorSet(vcount));
+//     }
+//     // random_shuffle(vertice.begin(), vertice.end());
+//     for (unsigned idx = 0; idx < vcount; idx++) {
+//         unsigned vid = vertice[idx];
+//         unsigned cid = idx % k;
+//         which_cluster[vid] = cid;
+//         clusters[cid].insert(vid);
+//     }
+//     return;
+// }
 
-void random_initialize(vector<unsigned> &which_cluster,
-                       vector<VectorSet> &clusters, unsigned vcount,
-                       unsigned k) {
-    srand(unsigned(time(0)));
-    vector<unsigned> vertice(vcount);
-    for (unsigned vid = 0; vid < vcount; vid++) {
-        vertice[vid] = vid;
-    }
-    clusters.reserve(k);
-    for (unsigned cid = 0; cid < k; cid++) {
-        clusters.push_back(VectorSet(vcount));
-    }
-    // random_shuffle(vertice.begin(), vertice.end());
-    for (unsigned idx = 0; idx < vcount; idx++) {
-        unsigned vid = vertice[idx];
-        unsigned cid = idx % k;
-        which_cluster[vid] = cid;
-        clusters[cid].insert(vid);
-    }
-    return;
-}
-
-void hint_initialize(const char *hint_filename, vector<unsigned> &which_cluster,
-                     vector<VectorSet> &clusters, unsigned vcount, unsigned k) {
-    clusters.reserve(k);
-    for (unsigned cid = 0; cid < k; cid++) {
-        clusters.push_back(VectorSet(vcount));
-    }
-    ifstream hint_file(hint_filename);
-    string line;
-    unsigned cid = 0;
-    while (getline(hint_file, line)) {
-        istringstream iss(line);
-        vector<string> tokens{istream_iterator<string>{iss},
-                              istream_iterator<string>{}};
-        for (auto it = tokens.begin(); it != tokens.end(); it++) {
-            unsigned vid = stoi(*it);
-            which_cluster[vid] = cid;
-            clusters[cid].insert(vid);
-        }
-        cid++;
-    }
-    hint_file.close();
-}
+// void hint_initialize(const char *hint_filename, vector<unsigned>
+// &which_cluster,
+//                      vector<VectorSet> &clusters, unsigned vcount, unsigned
+//                      k) {
+//     clusters.reserve(k);
+//     for (unsigned cid = 0; cid < k; cid++) {
+//         clusters.push_back(VectorSet(vcount));
+//     }
+//     ifstream hint_file(hint_filename);
+//     string line;
+//     unsigned cid = 0;
+//     while (getline(hint_file, line)) {
+//         istringstream iss(line);
+//         vector<string> tokens{istream_iterator<string>{iss},
+//                               istream_iterator<string>{}};
+//         for (auto it = tokens.begin(); it != tokens.end(); it++) {
+//             unsigned vid = stoi(*it);
+//             which_cluster[vid] = cid;
+//             clusters[cid].insert(vid);
+//         }
+//         cid++;
+//     }
+//     hint_file.close();
+// }
 
 void prunsigned_vector(vector<double> &v) {
     for (auto it = v.begin(); it != v.end(); it++) {
@@ -229,9 +231,9 @@ void read_binary_metric(const char *metric_filename, unsigned vcount,
         for (unsigned col = 0; col < vcount; col++) {
             metric_file.read(reinterpret_cast<char *>(&read), sizeof read);
             distance_metric[row][col] = read;
-            cout << read << " ";
+            // cout << read << " ";
         }
-        cout << endl;
+        // cout << endl;
     }
     metric_file.close();
 }
@@ -253,20 +255,34 @@ int main(int argc, char *argv[]) {
     read_binary_metric(metric_filename, vcount,
                        distance_metric); // read from binary file
 
-    vector<unsigned> which_cluster(vcount); // vid to cid table
     // vector<VectorSet> clusters;        // list of sets
     high_resolution_clock::time_point t1 =
         high_resolution_clock::now(); // start the timer
-    // if (argc == 4) {
-    //     random_initialize(which_cluster, clusters, vcount, k);
-    // } else {
-    //     const char *hint_filename = argv[4];
-    //     hunsigned_initialize(hint_filename, which_cluster, clusters,
-    //     vcount, k);
-    // }
-    unsigned temp[] = {0, 1, 0};
-    DisjointSets clusters(vcount, k, temp, temp + 3);
-    ksets(clusters, distance_metric, vcount, k); //
+    DisjointSets *clusters = NULL;
+    if (argc == 5) {
+        const char *hint_filename = argv[4];
+        ifstream hint_file(hint_filename);
+        string line;
+        unsigned cid = 0;
+        vector<unsigned> which_cluster(vcount);
+        while (getline(hint_file, line)) {
+            istringstream iss(line);
+            vector<string> tokens{istream_iterator<string>{iss},
+                                  istream_iterator<string>{}};
+            for (auto it = tokens.begin(); it != tokens.end(); it++) {
+                unsigned vid = stoi(*it);
+                which_cluster[vid] = cid;
+            }
+            cid++;
+        }
+        hint_file.close();
+        clusters = new DisjointSets(vcount, k, which_cluster.begin(),
+                                    which_cluster.end());
+    } else {
+        clusters = new DisjointSets(vcount, k);
+    }
+
+    ksets(*clusters, distance_metric, vcount, k); //
     // computing
 
     high_resolution_clock::time_point t2 =
@@ -274,14 +290,8 @@ int main(int argc, char *argv[]) {
     duration<double> time_span =
         duration_cast<duration<double>>(t2 - t1); // duration
 
-    // output result
-    // for (unsigned cid = 0; cid < k; cid++) {
-    //     for (auto it = clusters[cid].begin(); it != clusters[cid].end();
-    //     it++) {
-    //         cout << *it << " ";
-    //     }
-    //     cout << endl;
-    // }
+    clusters->print();
+    delete clusters;
     string time_filename = "nb_time.txt"; // name of the following file
     fstream time_fs(time_filename.c_str(),
                     fstream::out |
