@@ -22,7 +22,6 @@ DisjointSets::DisjointSets(unsigned n, unsigned k)
     : _n(n), _k(k),
       _seed(std::chrono::system_clock::now().time_since_epoch().count()),
       data(_n), first(_k, NONE), last(_k, NONE), size(_n, 0), which_cluster(n) {
-    _seed = 1460625373037597;
     assert(_n != NONE);
     random_assign();
     initial();
