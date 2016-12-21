@@ -182,13 +182,9 @@ class Clusters {
                             if (sets.size[old_cid] == 1) {
                                 correlation_measure = 0;
                             } else {
-                                // correlation_measure -=
-                                //     (pc_list[cid] - pv_list[vid]) *
-                                //     pv_list[vid];
                                 correlation_measure -=
                                     (pc_list[cid] - pv_list[vid]) *
-                                        pv_list[vid] +
-                                    pvv_list[vid];
+                                    pv_list[vid];
                             }
                         } else {
                             correlation_measure -= pc_list[cid] * pv_list[vid];
