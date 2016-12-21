@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     const char *time_filename = argv[3];
     ifstream file(filename);
     ofstream metadata(time_filename);
-    Clusters clusters(n, n, file, Clusters::InputFormat::THREE_COLOUMN);
+    Clusters clusters(n, n, file, Clusters::InputFormat::TWO_COLOUMN);
     file.close();
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     clusters.routine();
