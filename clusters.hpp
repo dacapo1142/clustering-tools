@@ -81,6 +81,7 @@ class Clusters {
             unsigned cid1 = sets.which_cluster[vid1];
             pc_list[cid1] += weight;
             pcc_list[cid1] += weight;
+            pvv_list[vid1] += weight;
         } else {
             total_weight += 2 * weight;
             adj_list[vid1].push_back(NodeInfo(vid2, weight));
@@ -120,12 +121,25 @@ class Clusters {
         for (auto &pcc : pcc_list) {
             pcc /= total_weight;
         }
+
+        for (auto &pvv : pvv_list) {
+            pvv /= total_weight;
+        }
+
         for (unsigned vid = 0; vid < vcount; vid++) {
             which_supernode[vid] = vid;
         }
     }
 
     bool partition_procedure(const PartitionMethod &method) {
+        std::cout << "pcc_list"
+                  << "\n";
+        print_vector(pcc_list);
+        std::cout << "pv_list"
+                  << "\n";
+        print_vector(pv_list);
+        std::cout << "--------"
+                  << "\n";
         unsigned round_count = 0;
         bool changed_once = false;
         bool changed = true;
@@ -212,7 +226,7 @@ class Clusters {
                 changed_once = true;
                 sets.move(vid, best_cid);
 
-                // P{uniform choice an edge, and one end is in cluster c}
+                // P{uniform choice an edge, and first end is in cluster c}
                 pc_list[old_cid] -= pv_list[vid];
                 pc_list[best_cid] += pv_list[vid];
 
@@ -223,6 +237,12 @@ class Clusters {
         }
         iter_record.push_back(round_count);
         return changed_once;
+    }
+    template <typename T> void print_vector(T vec) {
+        for (auto &v : vec) {
+            std::cout << v << " ";
+        }
+        std::cout << "\n";
     }
     bool NodeAggregate() { // O(m+n)
         unsigned new_vcount = nonempty_set.size();
@@ -300,6 +320,13 @@ class Clusters {
         pcc_list = std::move(new_pcc_list);
         pvv_list = pcc_list;
         adj_list = std::move(new_adj_list);
+
+        std::cout << "pcc_list"
+                  << "\n";
+        print_vector(pcc_list);
+        std::cout << "pv_list"
+                  << "\n";
+        print_vector(pv_list);
         vcount = new_vcount;
         DisjointSets new_sets(new_vcount, new_vcount, new_which_cluster.begin(),
                               new_which_cluster.end());
