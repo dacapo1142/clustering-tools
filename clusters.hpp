@@ -74,17 +74,26 @@ class Clusters {
 
     void add_edge(const unsigned &vid1, const unsigned &vid2,
                   const double &weight) {
-        total_weight += weight;
-        adj_list[vid1].push_back(NodeInfo(vid2, weight));
-        adj_list[vid2].push_back(NodeInfo(vid1, weight));
-        pv_list[vid1] += weight;
-        pv_list[vid2] += weight;
-        unsigned cid1 = sets.which_cluster[vid1];
-        unsigned cid2 = sets.which_cluster[vid2];
-        pc_list[cid1] += weight;
-        pc_list[cid2] += weight;
-        if (cid1 == cid2) {
+
+        if (vid1 == vid2) {
+            total_weight += weight;
+            pv_list[vid1] += weight;
+            unsigned cid1 = sets.which_cluster[vid1];
+            pc_list[cid1] += weight;
             pcc_list[cid1] += weight;
+        } else {
+            total_weight += 2 * weight;
+            adj_list[vid1].push_back(NodeInfo(vid2, weight));
+            adj_list[vid2].push_back(NodeInfo(vid1, weight));
+            pv_list[vid1] += weight;
+            pv_list[vid2] += weight;
+            unsigned cid1 = sets.which_cluster[vid1];
+            unsigned cid2 = sets.which_cluster[vid2];
+            pc_list[cid1] += weight;
+            pc_list[cid2] += weight;
+            if (cid1 == cid2) {
+                pcc_list[cid1] += weight;
+            }
         }
     }
     void read_weighted_edgelist_undirected(std::istream &file,
@@ -103,13 +112,13 @@ class Clusters {
         }
 
         for (auto &pv : pv_list) {
-            pv /= 2 * total_weight;
+            pv /= total_weight;
         }
         for (auto &pc : pc_list) {
-            pc /= 2 * total_weight;
+            pc /= total_weight;
         }
         for (auto &pcc : pcc_list) {
-            pcc /= 2 * total_weight;
+            pcc /= total_weight;
         }
         for (unsigned vid = 0; vid < vcount; vid++) {
             which_supernode[vid] = vid;
@@ -151,7 +160,7 @@ class Clusters {
                     candidate_sets[cid].it->cross += vertex2.weight;
                 }
                 for (auto &neighbor : candidate_list) {
-                    neighbor.cross /= 2 * total_weight;
+                    neighbor.cross /= total_weight;
                 }
 
                 unsigned best_cid = old_cid;
@@ -173,13 +182,18 @@ class Clusters {
                             if (sets.size[old_cid] == 1) {
                                 correlation_measure = 0;
                             } else {
+                                // correlation_measure -=
+                                //     (pc_list[cid] - pv_list[vid]) *
+                                //     pv_list[vid];
                                 correlation_measure -=
                                     (pc_list[cid] - pv_list[vid]) *
-                                    pv_list[vid];
+                                        pv_list[vid] +
+                                    pvv_list[vid];
                             }
                         } else {
                             correlation_measure -= pc_list[cid] * pv_list[vid];
                         }
+
                         if (correlation_measure > best_correlation_measure) {
                             best_correlation_measure = correlation_measure;
                             best_cid = cid;
