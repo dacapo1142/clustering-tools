@@ -39,15 +39,15 @@ void DisjointSets::random_assign() {
     }
 }
 
-void DisjointSets::print() {
+void DisjointSets::print(std::ostream &os) {
     for (unsigned cid = 0; cid < _k; cid++) {
         if (!empty(cid)) {
             unsigned vid = first[cid];
             while (vid != NONE) {
-                std::cout << vid << " ";
+                os << vid << " ";
                 vid = next(vid);
             }
-            std::cout << std::endl;
+            os << "\n";
         }
     }
 }

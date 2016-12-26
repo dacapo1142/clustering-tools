@@ -358,12 +358,14 @@ class Clusters {
         }
         std::cout << std::endl;
     }
-    void print_communities() {
+
+    void print_communities(std::ostream &of = std::cout) {
 
         DisjointSets s(original_vcount, nonempty_set.size(),
                        which_supernode.begin(), which_supernode.end());
-        s.print();
+        s.print(of);
     }
+
     void print_size(std::ostream &f) {
         for (auto &v : size_record) {
             f << v << " ";
