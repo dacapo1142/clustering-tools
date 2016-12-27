@@ -72,6 +72,19 @@ class Clusters {
         read_weighted_edgelist_undirected(file, inputformat);
     }
 
+    Clusters(unsigned _vcount, unsigned _k, std::istream &file, double lambda0,
+             double lambda1)
+        : original_vcount(_vcount), vcount(_vcount), k(_k), adj_list(_vcount),
+          pv_list(_vcount, 0.0), pc_list(_k, 0.0), pcc_list(_k, 0.0),
+          pvv_list(_vcount, 0.0), which_supernode(_vcount, 0), nonempty_set(_k),
+          sets(_vcount, _k), total_weight(0.0) {
+        // seed(std::chrono::system_clock::now().time_since_epoch().count())
+        for (unsigned cid = 0; cid < k; cid++) {
+            nonempty_set.insert(cid);
+        }
+        read_weighted_edgelist_undirected(file, lambda0, lambda1);
+    }
+
     void add_edge(const unsigned &vid1, const unsigned &vid2,
                   const double &weight) {
 
@@ -131,15 +144,40 @@ class Clusters {
         }
     }
 
+    void read_weighted_edgelist_undirected(std::istream &file, double lambda0,
+                                           double lambda1) {
+        unsigned vid1, vid2;
+        while (file >> vid1 >> vid2) {
+            if (vid1 == vid2)
+                add_edge(vid1, vid2, lambda0);
+            else
+                add_edge(vid1, vid2, lambda1);
+        }
+
+        for (unsigned vid = 0; vid < vcount; vid++) {
+            add_edge(vid, vid, lambda0);
+        }
+
+        for (auto &pv : pv_list) {
+            pv /= total_weight;
+        }
+        for (auto &pc : pc_list) {
+            pc /= total_weight;
+        }
+        for (auto &pcc : pcc_list) {
+            pcc /= total_weight;
+        }
+
+        for (auto &pvv : pvv_list) {
+            pvv /= total_weight;
+        }
+
+        for (unsigned vid = 0; vid < vcount; vid++) {
+            which_supernode[vid] = vid;
+        }
+    }
+
     bool partition_procedure(const PartitionMethod &method) {
-        std::cout << "pcc_list"
-                  << "\n";
-        print_vector(pcc_list);
-        std::cout << "pv_list"
-                  << "\n";
-        print_vector(pv_list);
-        std::cout << "--------"
-                  << "\n";
         unsigned round_count = 0;
         bool changed_once = false;
         bool changed = true;
@@ -321,12 +359,6 @@ class Clusters {
         pvv_list = pcc_list;
         adj_list = std::move(new_adj_list);
 
-        std::cout << "pcc_list"
-                  << "\n";
-        print_vector(pcc_list);
-        std::cout << "pv_list"
-                  << "\n";
-        print_vector(pv_list);
         vcount = new_vcount;
         DisjointSets new_sets(new_vcount, new_vcount, new_which_cluster.begin(),
                               new_which_cluster.end());
