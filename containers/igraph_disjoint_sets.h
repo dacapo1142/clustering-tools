@@ -1,5 +1,5 @@
-#ifndef DISJOINT_SETS_H
-#define DISJOINT_SETS_H
+#ifndef IGRAPH_DISJOINT_SETS_H
+#define IGRAPH_DISJOINT_SETS_H
 
 #include <algorithm>
 #include <cassert>
@@ -9,45 +9,39 @@
 #include <random>
 #include <vector>
 
-class DisjointSets {
-  public:
-    class Node {
+struct DisjointSets {
+    struct Node {
       public:
-        size_t next_id;
-        size_t prev_id;
+        unsigned next_id;
+        unsigned prev_id;
     };
-    class iterator {
-      public:
-        size_t i;
-    };
-    static const size_t NONE;
-    size_t _n;
-    size_t _k;
-    size_t _seed;
+    static const unsigned NONE;
+    unsigned _n;
+    unsigned _k;
+    unsigned _seed;
     std::vector<Node> data;
-    std::vector<size_t> first;
-    std::vector<size_t> last;
-    std::vector<size_t> size;
-    std::vector<size_t> which_cluster;
+    std::vector<unsigned> first;
+    std::vector<unsigned> last;
+    std::vector<unsigned> size;
+    std::vector<unsigned> which_cluster;
     template <typename T>
-    DisjointSets(size_t n, size_t k, T which_cluster_begin,
+    DisjointSets(unsigned n, unsigned k, T which_cluster_begin,
                  T which_cluster_end);
-    DisjointSets(size_t n, size_t k, size_t seed);
-    DisjointSets(size_t n, size_t k);
+    DisjointSets(unsigned n, unsigned k, unsigned seed);
+    DisjointSets(unsigned n, unsigned k);
     void initial();
-    inline bool empty(size_t cid);
-    inline void insert(size_t vid, size_t cid);
+    inline bool empty(unsigned cid);
+    inline void insert(unsigned vid, unsigned cid);
     inline void print();
-    inline size_t begin(size_t cid) { return first[cid]; }
-    inline size_t end() { return NONE; }
-    inline bool not_end(size_t vid) { return vid != NONE; }
-    inline size_t next(size_t &vid) { return data[vid].next_id; }
-    void merge(size_t cid1, size_t cid2);
+    inline unsigned begin(unsigned cid) { return first[cid]; }
+    inline unsigned end() { return NONE; }
+    inline bool not_end(unsigned vid) { return vid != NONE; }
+    inline unsigned next(unsigned &vid) { return data[vid].next_id; }
+    void merge(unsigned cid1, unsigned cid2);
     void random_assign();
-    void move(size_t vid, size_t cid);
-    size_t operator[](size_t i) { return 3; };
+    void move(unsigned vid, unsigned cid);
 };
 
-const size_t DisjointSets::NONE = std::numeric_limits<std::size_t>::max();
+const unsigned DisjointSets::NONE = std::numeric_limits<std::unsigned>::max();
 #include "disjoint_sets.cc"
 #endif

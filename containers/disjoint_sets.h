@@ -37,7 +37,7 @@ class DisjointSets {
     void initial();
     inline bool empty(unsigned cid);
     inline void insert(unsigned vid, unsigned cid);
-    inline void print();
+    inline void print(std::ostream &os);
     inline unsigned begin(unsigned cid) { return first[cid]; }
     inline unsigned end() { return NONE; }
     inline bool not_end(unsigned vid) { return vid != NONE; }
