@@ -152,7 +152,11 @@ class Clusters {
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
-            add_edge(vid, vid, lambda0 * adj_list[vid].size()); //p_ij = lambda_0 * k_i / 2m if i == j
+            unsigned k_i = adj_list[vid].size();
+            if (pvv_list[vid] > 0.0){   //already has a selfloop
+                k_i += 1;
+            }
+            add_edge(vid, vid, lambda0 * k_i); //p_ij = lambda_0 * k_i / 2m if i == j
         }
 
         for (auto &pv : pv_list) {
