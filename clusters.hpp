@@ -148,14 +148,11 @@ class Clusters {
                                            double lambda1) {
         unsigned vid1, vid2;
         while (file >> vid1 >> vid2) {
-            if (vid1 == vid2)
-                add_edge(vid1, vid2, lambda0);
-            else
-                add_edge(vid1, vid2, lambda1);
+            add_edge(vid1, vid2, lambda1);  //p_ij = lambda_1 / 2m if i != j
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
-            add_edge(vid, vid, lambda0);
+            add_edge(vid, vid, lambda0 * adj_list[vid].size()); //p_ij = lambda_0 * k_i / 2m if i == j
         }
 
         for (auto &pv : pv_list) {
