@@ -148,15 +148,16 @@ class Clusters {
                                            double lambda1) {
         unsigned vid1, vid2;
         while (file >> vid1 >> vid2) {
-            add_edge(vid1, vid2, lambda1);  //p_ij = lambda_1 / 2m if i != j
+            add_edge(vid1, vid2, lambda1); // p_ij = lambda_1 / 2m if i != j
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
             unsigned k_i = adj_list[vid].size();
-            if (pvv_list[vid] > 0.0){   //already has a selfloop
+            if (pvv_list[vid] > 0.0) { // already has a selfloop
                 k_i += 1;
             }
-            add_edge(vid, vid, lambda0 * k_i); //p_ij = lambda_0 * k_i / 2m if i == j
+            add_edge(vid, vid,
+                     lambda0 * k_i); // p_ij = lambda_0 * k_i / 2m if i == j
         }
 
         for (auto &pv : pv_list) {
@@ -187,7 +188,7 @@ class Clusters {
         while (changed) {
             round_count++;
             changed = false;
-            
+
             for (unsigned vid = 0; vid < vcount; vid++) {
                 unsigned old_cid = sets.which_cluster[vid];
                 if (sets.size[old_cid] <= 1 &&
@@ -197,13 +198,14 @@ class Clusters {
 
                 // old cid should be listed on the first of the set
                 candidate_set.insert(old_cid);
+                weight_list[old_cid] = 0;
                 for (auto &vertex2 : adj_list[vid]) {
                     unsigned vid2 = vertex2.vid;
                     unsigned cid = sets.which_cluster[vid2];
-                    
-                    if (candidate_set.find(cid)==candidate_set.end()) {
+
+                    if (candidate_set.find(cid) == candidate_set.end()) {
                         candidate_set.insert(cid);
-                        weight_list[cid]=0.0;
+                        weight_list[cid] = 0.0;
                     }
                     weight_list[cid] += vertex2.weight;
                 }
@@ -268,8 +270,7 @@ class Clusters {
                 pcc_list[old_cid] -= 2 * old_cross + pvv_list[vid];
                 pcc_list[best_cid] += 2 * best_cross + pvv_list[vid];
 
-
-                //clear candidate set
+                // clear candidate set
                 candidate_set.clear();
             }
         }
