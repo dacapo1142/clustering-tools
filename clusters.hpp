@@ -182,42 +182,37 @@ class Clusters {
         unsigned round_count = 0;
         bool changed_once = false;
         bool changed = true;
-
+        VectorSet candidate_set(vcount);
+        vector<double> weight_list(vcount);
         while (changed) {
             round_count++;
             changed = false;
-            std::vector<
-                VertexRecord<typename std::list<NeighborVertex>::iterator>>
-                candidate_sets(vcount, vcount);
+            
             for (unsigned vid = 0; vid < vcount; vid++) {
                 unsigned old_cid = sets.which_cluster[vid];
                 if (sets.size[old_cid] <= 1 &&
                     method == PartitionMethod::KSETS_PLUS) {
                     continue;
                 }
-                std::list<NeighborVertex> candidate_list;
-                // old cid should be listed on the first of the list
-                candidate_sets[old_cid] = vid;
-                candidate_list.push_back(NeighborVertex(old_cid));
-                candidate_sets[old_cid].it = std::prev(candidate_list.end());
 
+                // old cid should be listed on the first of the set
+                candidate_set.insert(old_cid);
                 for (auto &vertex2 : adj_list[vid]) {
                     unsigned vid2 = vertex2.vid;
                     unsigned cid = sets.which_cluster[vid2];
-                    typename std::list<NeighborVertex>::iterator it;
-                    if (!candidate_sets[cid].is_recorded_by(vid)) {
-                        candidate_list.push_back(NeighborVertex(cid));
-                        candidate_sets[cid].record(
-                            vid, std::prev(candidate_list.end()));
+                    
+                    if (candidate_set.find(cid)==candidate_set.end()) {
+                        candidate_set.insert(cid);
+                        weight_list[cid]=0.0;
                     }
-                    candidate_sets[cid].it->cross += vertex2.weight;
+                    weight_list[cid] += vertex2.weight;
                 }
-                for (auto &neighbor : candidate_list) {
-                    neighbor.cross /= total_weight;
+                for (auto &cid : candidate_set) {
+                    weight_list[cid] /= total_weight;
                 }
 
                 unsigned best_cid = old_cid;
-                double old_cross = candidate_list.begin()->cross;
+                double old_cross = weight_list[old_cid];
                 double best_cross = old_cross;
                 // for the case chosing ksets+
                 double best_correlation_measure;
@@ -227,9 +222,9 @@ class Clusters {
                     best_correlation_measure =
                         -std::numeric_limits<double>::max(); // best modularity
                                                              // = -inf
-                    for (auto &neighbor : candidate_list) {
-                        unsigned cid = neighbor.cid;
-                        double correlation_measure = neighbor.cross;
+                    for (auto &neighbor : candidate_set) {
+                        unsigned cid = sets.which_cluster[neighbor];
+                        double correlation_measure = weight_list[cid];
 
                         if (old_cid == cid) {
                             if (sets.size[old_cid] == 1) {
@@ -246,7 +241,7 @@ class Clusters {
                         if (correlation_measure > best_correlation_measure) {
                             best_correlation_measure = correlation_measure;
                             best_cid = cid;
-                            best_cross = neighbor.cross;
+                            best_cross = weight_list[best_cid];
                         }
                     }
                 }
@@ -272,6 +267,10 @@ class Clusters {
                 // P{uniform choice and edge, and two ends are in cluster c}
                 pcc_list[old_cid] -= 2 * old_cross + pvv_list[vid];
                 pcc_list[best_cid] += 2 * best_cross + pvv_list[vid];
+
+
+                //clear candidate set
+                candidate_set.clear();
             }
         }
         iter_record.push_back(round_count);
