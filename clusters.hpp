@@ -224,8 +224,7 @@ class Clusters {
                     best_correlation_measure =
                         -std::numeric_limits<double>::max(); // best modularity
                                                              // = -inf
-                    for (auto &neighbor : candidate_set) {
-                        unsigned cid = sets.which_cluster[neighbor];
+                    for (auto &cid : candidate_set) {
                         double correlation_measure = weight_list[cid];
 
                         if (old_cid == cid) {
