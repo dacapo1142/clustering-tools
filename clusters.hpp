@@ -190,6 +190,7 @@ class Clusters {
             changed = false;
 
             for (unsigned vid = 0; vid < vcount; vid++) {
+                candidate_set.clear();
                 unsigned old_cid = sets.which_cluster[vid];
                 if (sets.size[old_cid] <= 1 &&
                     method == PartitionMethod::KSETS_PLUS) {
@@ -267,10 +268,7 @@ class Clusters {
 
                 // P{uniform choice and edge, and two ends are in cluster c}
                 pcc_list[old_cid] -= 2 * old_cross + pvv_list[vid];
-                pcc_list[best_cid] += 2 * best_cross + pvv_list[vid];
-
-                // clear candidate set
-                candidate_set.clear();
+                pcc_list[best_cid] += 2 * best_cross + pvv_list[vid];                
             }
         }
         iter_record.push_back(round_count);
