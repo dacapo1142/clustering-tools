@@ -3,8 +3,6 @@
 #include <cstddef>
 #include <limits>
 #include <vector>
-#include <iostream>
-using namespace std;
 
 class VectorSet {
   private:
@@ -48,10 +46,10 @@ class VectorSet {
     inline auto &operator[](size_t i) { return _data[i]; }
     inline size_t size() { return _size; }
     inline void clear() {
-        for(auto &v:*this){
-            _index[v]=NONE;
+        for (auto &v : *this) {
+            _index[v] = NONE;
         }
-        _size=0;
+        _size = 0;
     }
 };
 
