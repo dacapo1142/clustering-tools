@@ -184,7 +184,7 @@ class Clusters {
         bool changed_once = false;
         bool changed = true;
         VectorSet candidate_set(vcount);
-        vector<double> weight_list(vcount);
+        std::vector<double> weight_list(vcount);
         while (changed) {
             round_count++;
             changed = false;
@@ -192,10 +192,6 @@ class Clusters {
             for (unsigned vid = 0; vid < vcount; vid++) {
                 candidate_set.clear();
                 unsigned old_cid = sets.which_cluster[vid];
-                if (sets.size[old_cid] <= 1 &&
-                    method == PartitionMethod::KSETS_PLUS) {
-                    continue;
-                }
 
                 // old cid should be listed on the first of the set
                 candidate_set.insert(old_cid);
@@ -204,7 +200,7 @@ class Clusters {
                     unsigned vid2 = vertex2.vid;
                     unsigned cid = sets.which_cluster[vid2];
 
-                    if (candidate_set.find(cid) == candidate_set.end()) {
+                    if (!candidate_set.contains(cid)) {
                         candidate_set.insert(cid);
                         weight_list[cid] = 0.0;
                     }
@@ -219,42 +215,39 @@ class Clusters {
                 double best_cross = old_cross;
                 // for the case chosing ksets+
                 double best_correlation_measure;
-                if (method == PartitionMethod::KSETS_PLUS) {
 
-                } else {
-                    best_correlation_measure =
-                        -std::numeric_limits<double>::max(); // best modularity
-                                                             // = -inf
-                    for (auto &cid : candidate_set) {
-                        double correlation_measure = weight_list[cid];
+                best_correlation_measure =
+                    -std::numeric_limits<double>::max(); // best modularity
+                                                            // = -inf
+                for (auto &cid : candidate_set) {
+                    double correlation_measure = weight_list[cid];
 
-                        if (old_cid == cid) {
-                            if (sets.size[old_cid] == 1) {
-                                correlation_measure = 0;
-                            } else {
-                                correlation_measure -=
-                                    (pc_list[cid] - pv_list[vid]) *
-                                    pv_list[vid];
-                            }
+                    if (old_cid == cid) {
+                        if (sets.size[old_cid] == 1) {
+                            correlation_measure = 0;
                         } else {
-                            correlation_measure -= pc_list[cid] * pv_list[vid];
+                            correlation_measure -=
+                                (pc_list[cid] - pv_list[vid]) *
+                                pv_list[vid];
                         }
+                    } else {
+                        correlation_measure -= pc_list[cid] * pv_list[vid];
+                    }
 
-                        if (correlation_measure > best_correlation_measure) {
-                            best_correlation_measure = correlation_measure;
-                            best_cid = cid;
-                            best_cross = weight_list[best_cid];
-                        }
+                    if (correlation_measure > best_correlation_measure) {
+                        best_correlation_measure = correlation_measure;
+                        best_cid = cid;
+                        best_cross = weight_list[best_cid];
                     }
                 }
+
 
                 // doesn't change
                 if (best_cid == old_cid) {
                     continue;
                 }
 
-                if (method == PartitionMethod::PARTITION_INPUT &&
-                    sets.size[old_cid] == 1) {
+                if (sets.size[old_cid] == 1) {
                     nonempty_set.erase(old_cid);
                 }
 
@@ -280,7 +273,7 @@ class Clusters {
         }
         std::cout << "\n";
     }
-    bool NodeAggregate() { // O(m+n)
+    bool node_aggregation() { // O(m+n)
         unsigned new_vcount = nonempty_set.size();
         VectorSet new_nonempty_set(new_vcount);
         unsigned max_cid = vcount;
@@ -376,7 +369,7 @@ class Clusters {
         while (true) {
             k = vcount;
             if (!partition_procedure(PartitionMethod::PARTITION_INPUT) ||
-                !NodeAggregate()) {
+                !node_aggregation()) {
                 break;
             }
         }

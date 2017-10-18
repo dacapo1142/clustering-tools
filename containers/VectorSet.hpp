@@ -43,6 +43,9 @@ class VectorSet {
             return this->end();
         }
     }
+    inline bool contains(const size_t &vid){
+        return _index[vid] != NONE;
+    }
     inline auto &operator[](size_t i) { return _data[i]; }
     inline size_t size() { return _size; }
     inline void clear() {
