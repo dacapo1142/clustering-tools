@@ -10,10 +10,19 @@ class VectorSet {
     std::vector<size_t> _index;
     size_t _size;
     const static size_t NONE;
+    size_t _capacity;
 
   public:
     VectorSet(size_t max_length)
-        : _data(max_length), _index(max_length, NONE), _size(0){};
+        : _data(max_length), _index(max_length, NONE), _size(0),
+          _capacity(max_length){};
+    inline void initial_full() {
+        _size = _capacity;
+        for (size_t vid = 0; vid < _capacity; vid++) {
+            _data[vid] = vid;
+            _index[vid] = vid;
+        }
+    }
     inline void insert(size_t vid) {
         if (_index[vid] == NONE) {
             _data[_size] = vid;
@@ -43,9 +52,7 @@ class VectorSet {
             return this->end();
         }
     }
-    inline bool contains(const size_t &vid){
-        return _index[vid] != NONE;
-    }
+    inline bool contain(const size_t &vid) { return _index[vid] != NONE; }
     inline auto &operator[](size_t i) { return _data[i]; }
     inline size_t size() { return _size; }
     inline void clear() {
@@ -54,6 +61,7 @@ class VectorSet {
         }
         _size = 0;
     }
+    inline size_t position(const size_t &vid) { return _index[vid]; }
 };
 
 const size_t VectorSet::NONE = std::numeric_limits<size_t>::max();
