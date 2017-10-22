@@ -83,8 +83,8 @@ class Clusters {
             pvv_list[vid1] += weight;
         } else {
             total_weight += 2 * weight;
-            adj_list[vid1].push_back(NodeInfo(vid2, weight));
-            adj_list[vid2].push_back(NodeInfo(vid1, weight));
+            adj_list[vid1].emplace_back(vid2, weight);
+            adj_list[vid2].emplace_back(vid1, weight);
             pv_list[vid1] += weight;
             pv_list[vid2] += weight;
             unsigned cid1 = sets.which_cluster[vid1];
@@ -287,8 +287,8 @@ class Clusters {
                     double weight = vertex2.weight;
 
                     if (std::get<2>(entries[new_vid2]) != new_vid1) {
-                        new_adj_list[new_vid1].push_back(NodeInfo(new_vid2));
-                        new_adj_list[new_vid2].push_back(NodeInfo(new_vid1));
+                        new_adj_list[new_vid1].emplace_back(new_vid2);
+                        new_adj_list[new_vid2].emplace_back(new_vid1);
                         entries[new_vid2] = std::make_tuple(
                             std::prev(new_adj_list[new_vid1].end()),
                             std::prev(new_adj_list[new_vid2].end()), new_vid1);
