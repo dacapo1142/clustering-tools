@@ -282,7 +282,6 @@ class Clusters {
         std::vector<double> new_pv_list(new_vcount, 0.0);
         std::vector<double> new_pcc_list(new_vcount, 0.0);
         
-        unsigned cid_pivot = 0;
         for (auto &cid1 : nonempty_set) {
 
             unsigned new_vid1 = nonempty_set.position(cid1);
