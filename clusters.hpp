@@ -216,25 +216,20 @@ class Clusters {
                     }
                     weight_list[cid] += vertex2.weight;
                 }
-
+                candidate_set.erase(old_cid);
+                
+                double pv = pv_list[vid];
                 unsigned best_cid = old_cid;
 
-                double best_correlation_measure =
-                    -std::numeric_limits<double>::max(); // best modularity
-                                                        // = -inf
-                double pv = pv_list[vid];                                        
+                double best_correlation_measure = 0;
+                if (sets.size[old_cid] != 1) {
+                    best_correlation_measure =
+                        weight_list[old_cid] - (pc_list[old_cid] - pv) * pv;
+                }
+
                 for (auto &cid : candidate_set) {
                     double correlation_measure = weight_list[cid];
-                    double pc = pc_list[cid];
-                    if (old_cid == cid) {
-                        if (sets.size[old_cid] == 1) {
-                            correlation_measure = 0;
-                        } else {
-                            correlation_measure -= (pc - pv) * pv;
-                        }
-                    } else {
-                        correlation_measure -= pc * pv;
-                    }
+                    correlation_measure = weight_list[cid] - pc_list[cid] * pv;
 
                     if (correlation_measure > best_correlation_measure) {
                         best_correlation_measure = correlation_measure;
