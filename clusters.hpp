@@ -276,9 +276,7 @@ class Clusters {
         VectorSet neighbor_set(new_vcount);
 
         typedef std::list<NodeInfo>::iterator It;
-        std::vector<It> first_entries(new_vcount);
-        std::vector<It> second_entries(new_vcount);
-        
+        std::vector<std::pair<It,It>> entries(new_vcount);
         unsigned max_cid = vcount;
         std::vector<std::list<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
@@ -305,21 +303,24 @@ class Clusters {
                     }
 
                     double weight = vertex2.weight;
+                    std::pair<It, It> it;
+
                     if(!neighbor_set.contain(new_vid2)){
                         new_adj_list[new_vid1].push_back(NodeInfo(new_vid2));
                         new_adj_list[new_vid2].push_back(NodeInfo(new_vid1));
-                        first_entries[new_vid2] = std::prev(new_adj_list[new_vid1].end());
-                        second_entries[new_vid2] = std::prev(new_adj_list[new_vid2].end());
+                        std::get<0>(it) = std::prev(new_adj_list[new_vid1].end());
+                        std::get<1>(it) = std::prev(new_adj_list[new_vid2].end());
+                        entries[new_vid2] = it;
                     }
+                    it = entries[new_vid2];
 
-                    first_entries[new_vid2]->weight+=weight;
-                    second_entries[new_vid2]->weight+=weight;
+                    std::get<0>(it)->weight+=weight;
+                    std::get<1>(it)->weight+=weight;
 
                 }
             }
         }
         std::vector<double> new_pc_list(new_pv_list);
-
         std::vector<unsigned> new_which_cluster(new_vcount);
         for (unsigned vid = 0; vid < new_vcount; vid++) {
             new_which_cluster[vid] = vid;
