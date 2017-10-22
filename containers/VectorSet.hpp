@@ -18,10 +18,9 @@ class VectorSet {
           _capacity(max_length){};
     inline void initial_full() {
         _size = _capacity;
-        for (size_t vid = 0; vid < _capacity; vid++) {
-            _data[vid] = vid;
-            _index[vid] = vid;
-        }
+        std::iota(_data.begin(), _data.end(), 0);
+        std::iota(_index.begin(), _index.end(), 0);
+        
     }
     inline void insert(size_t vid) {
         if (_index[vid] == NONE) {

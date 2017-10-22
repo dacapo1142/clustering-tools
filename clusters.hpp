@@ -143,9 +143,8 @@ class Clusters {
             }
         }
 
-        for (unsigned vid = 0; vid < vcount; vid++) {
-            which_supernode[vid] = vid;
-        }
+        std:iota(which_supernode.begin(), which_supernode.end(), 0)
+        
     }
 
     void read_weighted_edgelist_undirected(std::istream &file, double lambda0,
@@ -184,9 +183,7 @@ class Clusters {
             }
         }
 
-        for (unsigned vid = 0; vid < vcount; vid++) {
-            which_supernode[vid] = vid;
-        }
+        std:iota(which_supernode.begin(), which_supernode.end(), 0)
     }
 
     bool partition_procedure(const PartitionMethod &method) {
@@ -273,7 +270,8 @@ class Clusters {
         // VectorSet neighbor_set(new_vcount);
 
         typedef std::list<NodeInfo>::iterator It;
-        std::vector<std::tuple<It, It, unsigned>> entries(new_vcount, std::make_tuple(It(), It(), new_vcount+1));
+        std::vector<std::tuple<It, It, unsigned>> entries(
+            new_vcount, std::make_tuple(It(), It(), new_vcount + 1));
         unsigned max_cid = vcount;
         std::vector<std::list<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
