@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <limits>
 #include <vector>
+#include <numeric>
 
 class VectorSet {
   private:

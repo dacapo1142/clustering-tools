@@ -12,6 +12,8 @@
 #include <set>
 #include <tuple>
 #include <vector>
+#include <numeric>
+
 
 class Clusters {
   public:
@@ -25,28 +27,14 @@ class Clusters {
         NodeInfo(unsigned _vid) : NodeInfo(_vid, 0.0) {}
     };
 
-    class NeighborVertex {
-      public:
-        NeighborVertex(unsigned _cid) : cid(_cid), cross(0.0) {}
-        unsigned cid;
-        double cross;
-    };
+    template<typename T>    
+    using List = std::list<T>;
 
-    template <typename T> class VertexRecord {
-      public:
-        unsigned vid;
-        T it;
-        VertexRecord(unsigned _vid) : vid(_vid) {}
-        inline bool is_recorded_by(unsigned _vid) { return vid == _vid; }
-        inline void record(unsigned _vid, T _it) {
-            vid = _vid;
-            it = _it;
-        }
-    };
     unsigned original_vcount;
     unsigned vcount;
     unsigned k;
-    std::vector<std::list<NodeInfo>> adj_list;
+
+    std::vector<List<NodeInfo>> adj_list;
     std::vector<double> pv_list;
     std::vector<double> pc_list;
     std::vector<double> pcc_list;
@@ -143,7 +131,7 @@ class Clusters {
             }
         }
 
-        std:iota(which_supernode.begin(), which_supernode.end(), 0)
+        std:iota(which_supernode.begin(), which_supernode.end(), 0);
         
     }
 
@@ -183,7 +171,7 @@ class Clusters {
             }
         }
 
-        std:iota(which_supernode.begin(), which_supernode.end(), 0)
+        std:iota(which_supernode.begin(), which_supernode.end(), 0);
     }
 
     bool partition_procedure(const PartitionMethod &method) {
@@ -269,11 +257,11 @@ class Clusters {
         unsigned new_vcount = nonempty_set.size();
         // VectorSet neighbor_set(new_vcount);
 
-        typedef std::list<NodeInfo>::iterator It;
+        typedef List<NodeInfo>::iterator It;
         std::vector<std::tuple<It, It, unsigned>> entries(
             new_vcount, std::make_tuple(It(), It(), new_vcount + 1));
         unsigned max_cid = vcount;
-        std::vector<std::list<NodeInfo>> new_adj_list(new_vcount);
+        std::vector<List<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
         std::vector<double> new_pcc_list(new_vcount, 0.0);
 
