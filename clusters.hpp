@@ -138,6 +138,12 @@ class Clusters {
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
+            for(auto &nei:adj_list[vid]){
+                nei.weight/=total_weight;
+            }
+        }
+
+        for (unsigned vid = 0; vid < vcount; vid++) {
             which_supernode[vid] = vid;
         }
     }
@@ -173,6 +179,12 @@ class Clusters {
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
+            for(auto &nei:adj_list[vid]){
+                nei.weight/=total_weight;
+            }
+        }
+
+        for (unsigned vid = 0; vid < vcount; vid++) {
             which_supernode[vid] = vid;
         }
     }
@@ -203,9 +215,6 @@ class Clusters {
                         weight_list[cid] = 0.0;
                     }
                     weight_list[cid] += vertex2.weight;
-                }
-                for (auto &cid : candidate_set) {
-                    weight_list[cid] /= total_weight;
                 }
 
                 unsigned best_cid = old_cid;
