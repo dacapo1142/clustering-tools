@@ -217,7 +217,7 @@ class Clusters {
                     weight_list[cid] += vertex2.weight;
                 }
                 candidate_set.erase(old_cid);
-                
+
                 double pv = pv_list[vid];
                 unsigned best_cid = old_cid;
 
@@ -270,10 +270,10 @@ class Clusters {
     }
     bool node_aggregation() { // O(m+n)
         unsigned new_vcount = nonempty_set.size();
-        VectorSet neighbor_set(new_vcount);
+        // VectorSet neighbor_set(new_vcount);
 
         typedef std::list<NodeInfo>::iterator It;
-        std::vector<std::pair<It, It>> entries(new_vcount);
+        std::vector<std::tuple<It, It, unsigned>> entries(new_vcount, std::make_tuple(It(), It(), new_vcount+1));
         unsigned max_cid = vcount;
         std::vector<std::list<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
@@ -286,7 +286,7 @@ class Clusters {
             new_pcc_list[new_cid1] = pcc_list[cid1];
             for (auto vid1 = sets.begin(cid1); vid1 != sets.end();
                  vid1 = sets.next(vid1)) {
-                neighbor_set.clear();
+                // neighbor_set.clear();
                 new_pv_list[new_vid1] += pv_list[vid1];
                 for (auto &vertex2 : adj_list[vid1]) {
                     unsigned vid2 = vertex2.vid;
@@ -299,19 +299,15 @@ class Clusters {
                     }
 
                     double weight = vertex2.weight;
-                    std::pair<It, It> it;
 
-                    if (!neighbor_set.contain(new_vid2)) {
+                    if (std::get<2>(entries[new_vid2]) != new_vid1) {
                         new_adj_list[new_vid1].push_back(NodeInfo(new_vid2));
                         new_adj_list[new_vid2].push_back(NodeInfo(new_vid1));
-                        std::get<0>(it) =
-                            std::prev(new_adj_list[new_vid1].end());
-                        std::get<1>(it) =
-                            std::prev(new_adj_list[new_vid2].end());
-                        entries[new_vid2] = it;
+                        entries[new_vid2] = std::make_tuple(
+                            std::prev(new_adj_list[new_vid1].end()),
+                            std::prev(new_adj_list[new_vid2].end()), new_vid1);
                     }
-                    it = entries[new_vid2];
-
+                    auto it = entries[new_vid2];
                     std::get<0>(it)->weight += weight;
                     std::get<1>(it)->weight += weight;
                 }
