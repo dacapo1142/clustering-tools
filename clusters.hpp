@@ -257,7 +257,7 @@ class Clusters {
         unsigned new_vcount = nonempty_set.size();
         // VectorSet neighbor_set(new_vcount);
 
-        typedef List<NodeInfo>::iterator It;
+        typedef List<NodeInfo>::reverse_iterator It;
         std::vector<std::tuple<It, It, unsigned>> entries(
             new_vcount, std::make_tuple(It(), It(), new_vcount + 1));
         unsigned max_cid = vcount;
@@ -290,8 +290,8 @@ class Clusters {
                         new_adj_list[new_vid1].emplace_back(new_vid2);
                         new_adj_list[new_vid2].emplace_back(new_vid1);
                         entries[new_vid2] = std::make_tuple(
-                            std::prev(new_adj_list[new_vid1].end()),
-                            std::prev(new_adj_list[new_vid2].end()), new_vid1);
+                            new_adj_list[new_vid1].rbegin(),
+                            new_adj_list[new_vid2].rbegin(), new_vid1);
                     }
                     auto it = entries[new_vid2];
                     std::get<0>(it)->weight += weight;
