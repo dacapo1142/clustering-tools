@@ -67,7 +67,7 @@ class Clusters {
           sets(_vcount, _k), total_weight(0.0) {
         // seed(std::chrono::system_clock::now().time_since_epoch().count())
         nonempty_set.initial_full();
-        
+
         read_weighted_edgelist_undirected(file, inputformat);
     }
 
@@ -79,7 +79,7 @@ class Clusters {
           sets(_vcount, _k), total_weight(0.0) {
         // seed(std::chrono::system_clock::now().time_since_epoch().count())
         nonempty_set.initial_full();
-        
+
         read_weighted_edgelist_undirected(file, lambda0, lambda1);
     }
 
@@ -138,8 +138,8 @@ class Clusters {
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
-            for(auto &nei:adj_list[vid]){
-                nei.weight/=total_weight;
+            for (auto &nei : adj_list[vid]) {
+                nei.weight /= total_weight;
             }
         }
 
@@ -179,8 +179,8 @@ class Clusters {
         }
 
         for (unsigned vid = 0; vid < vcount; vid++) {
-            for(auto &nei:adj_list[vid]){
-                nei.weight/=total_weight;
+            for (auto &nei : adj_list[vid]) {
+                nei.weight /= total_weight;
             }
         }
 
@@ -218,36 +218,29 @@ class Clusters {
                 }
 
                 unsigned best_cid = old_cid;
-                double old_cross = weight_list[old_cid];
-                double best_cross = old_cross;
-                // for the case chosing ksets+
-                double best_correlation_measure;
 
-                best_correlation_measure =
+                double best_correlation_measure =
                     -std::numeric_limits<double>::max(); // best modularity
-                                                            // = -inf
+                                                        // = -inf
+                double pv = pv_list[vid];                                        
                 for (auto &cid : candidate_set) {
                     double correlation_measure = weight_list[cid];
-
+                    double pc = pc_list[cid];
                     if (old_cid == cid) {
                         if (sets.size[old_cid] == 1) {
                             correlation_measure = 0;
                         } else {
-                            correlation_measure -=
-                                (pc_list[cid] - pv_list[vid]) *
-                                pv_list[vid];
+                            correlation_measure -= (pc - pv) * pv;
                         }
                     } else {
-                        correlation_measure -= pc_list[cid] * pv_list[vid];
+                        correlation_measure -= pc * pv;
                     }
 
                     if (correlation_measure > best_correlation_measure) {
                         best_correlation_measure = correlation_measure;
                         best_cid = cid;
-                        best_cross = weight_list[best_cid];
                     }
                 }
-
 
                 // doesn't change
                 if (best_cid == old_cid) {
@@ -267,8 +260,8 @@ class Clusters {
                 pc_list[best_cid] += pv_list[vid];
 
                 // P{uniform choice and edge, and two ends are in cluster c}
-                pcc_list[old_cid] -= 2 * old_cross + pvv_list[vid];
-                pcc_list[best_cid] += 2 * best_cross + pvv_list[vid];                
+                pcc_list[old_cid] -= 2 * weight_list[old_cid] + pvv_list[vid];
+                pcc_list[best_cid] += 2 * weight_list[best_cid] + pvv_list[vid];
             }
         }
         iter_record.push_back(round_count);
@@ -285,12 +278,12 @@ class Clusters {
         VectorSet neighbor_set(new_vcount);
 
         typedef std::list<NodeInfo>::iterator It;
-        std::vector<std::pair<It,It>> entries(new_vcount);
+        std::vector<std::pair<It, It>> entries(new_vcount);
         unsigned max_cid = vcount;
         std::vector<std::list<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
         std::vector<double> new_pcc_list(new_vcount, 0.0);
-        
+
         for (auto &cid1 : nonempty_set) {
 
             unsigned new_vid1 = nonempty_set.position(cid1);
@@ -313,18 +306,19 @@ class Clusters {
                     double weight = vertex2.weight;
                     std::pair<It, It> it;
 
-                    if(!neighbor_set.contain(new_vid2)){
+                    if (!neighbor_set.contain(new_vid2)) {
                         new_adj_list[new_vid1].push_back(NodeInfo(new_vid2));
                         new_adj_list[new_vid2].push_back(NodeInfo(new_vid1));
-                        std::get<0>(it) = std::prev(new_adj_list[new_vid1].end());
-                        std::get<1>(it) = std::prev(new_adj_list[new_vid2].end());
+                        std::get<0>(it) =
+                            std::prev(new_adj_list[new_vid1].end());
+                        std::get<1>(it) =
+                            std::prev(new_adj_list[new_vid2].end());
                         entries[new_vid2] = it;
                     }
                     it = entries[new_vid2];
 
-                    std::get<0>(it)->weight+=weight;
-                    std::get<1>(it)->weight+=weight;
-
+                    std::get<0>(it)->weight += weight;
+                    std::get<1>(it)->weight += weight;
                 }
             }
         }
