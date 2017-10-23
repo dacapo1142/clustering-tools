@@ -27,9 +27,13 @@ class Clusters {
         NodeInfo(unsigned _vid) : NodeInfo(_vid, 0.0) {}
     };
 
+    #ifndef VECTOR
     template<typename T>    
     using List = std::list<T>;
-
+    #else
+    template<typename T>    
+    using List = std::vector<T>;
+    #endif
     unsigned original_vcount;
     unsigned vcount;
     unsigned k;
@@ -256,11 +260,14 @@ class Clusters {
     bool node_aggregation() { // O(m+n)
         unsigned new_vcount = nonempty_set.size();
         // VectorSet neighbor_set(new_vcount);
-
+        #ifndef VECTOR
         typedef std::add_pointer<NodeInfo>::type It;
         std::vector<std::tuple<It, It, unsigned>> entries(
             new_vcount, std::make_tuple(It(), It(), new_vcount + 1));
-        unsigned max_cid = vcount;
+        #else
+        std::vector<std::tuple<unsigned, unsigned, unsigned>> entries(
+            new_vcount, std::make_tuple(unsigned(), unsigned(), new_vcount + 1));
+        #endif
         std::vector<List<NodeInfo>> new_adj_list(new_vcount);
         std::vector<double> new_pv_list(new_vcount, 0.0);
         std::vector<double> new_pcc_list(new_vcount, 0.0);
@@ -289,13 +296,24 @@ class Clusters {
                     if (std::get<2>(entries[new_vid2]) != new_vid1) {
                         new_adj_list[new_vid1].emplace_back(new_vid2);
                         new_adj_list[new_vid2].emplace_back(new_vid1);
+                        #ifndef VECTOR
                         entries[new_vid2] = std::make_tuple(
                             &new_adj_list[new_vid1].back(),
                             &new_adj_list[new_vid2].back(), new_vid1);
+                        #else
+                        entries[new_vid2] = std::make_tuple(
+                            new_adj_list[new_vid1].size()-1,
+                            new_adj_list[new_vid2].size()-1, new_vid1);
+                        #endif
                     }
                     auto it = entries[new_vid2];
+                    #ifndef VECTOR
                     std::get<0>(it)->weight += weight;
                     std::get<1>(it)->weight += weight;
+                    #else
+                    new_adj_list[new_vid1][std::get<0>(it)].weight+=weight;
+                    new_adj_list[new_vid2][std::get<1>(it)].weight+=weight;
+                    #endif
                 }
             }
         }
