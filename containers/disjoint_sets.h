@@ -8,44 +8,43 @@
 #include <limits>
 #include <random>
 #include <vector>
+#include "VectorSet.hpp"
 
 class DisjointSets {
   public:
-    class Node {
+  //iterator wrapper
+    template <typename T> class IterWrapper {
+        T &_v;
+        size_t _start;
+        size_t _end;
       public:
-        unsigned next_id;
-        unsigned prev_id;
+        IterWrapper(T &v, size_t start, size_t end)
+            : _v(v), _start(start), _end(end) {}
+        auto begin() { return _v.begin() + _start; }
+        auto end(){return _v.begin() + _end;}
+        auto size(){return _end-_start;}
     };
-    class iterator {
-      public:
-        unsigned i;
-    };
+    //member
     static const unsigned NONE;
     unsigned _n;
     unsigned _k;
-    long _seed;
-    std::vector<Node> data;
-    std::vector<unsigned> first;
-    std::vector<unsigned> last;
     std::vector<unsigned> size;
-    std::vector<unsigned> which_cluster;
-    template <typename T>
-    DisjointSets(unsigned n, unsigned k, T which_cluster_begin,
-                 T which_cluster_end);
-    DisjointSets(unsigned n, unsigned k, unsigned seed);
-    DisjointSets(unsigned n, unsigned k);
-    void initial();
-    inline bool empty(unsigned cid);
-    inline void insert(unsigned vid, unsigned cid);
+    std::vector<unsigned> c_id;
+    VectorSet nonempty_set;
+    std::vector<unsigned> disjoint_set;
+    std::vector<unsigned> stored_range;
+    std::vector<unsigned> new_size;
+
+    //opeartions
+    DisjointSets(unsigned n);
+    void init_disjoint_set();
+    inline void _insert(unsigned vid, unsigned cid);
     inline void print(std::ostream &os);
-    inline unsigned begin(unsigned cid) { return first[cid]; }
-    inline unsigned end() { return NONE; }
-    inline bool not_end(unsigned vid) { return vid != NONE; }
-    inline unsigned next(unsigned &vid) { return data[vid].next_id; }
-    void merge(unsigned cid1, unsigned cid2);
-    void random_assign();
-    void move(unsigned vid, unsigned cid);
-    unsigned operator[](unsigned i) { return 3; };
+    void assign(unsigned vid, unsigned cid);
+    auto operator[](unsigned cid) {
+      return IterWrapper<decltype(disjoint_set)>(disjoint_set, size[cid], size[cid+1]);
+    };
+    auto num_sets(){return nonempty_set.size();}
 };
 
 const unsigned DisjointSets::NONE = std::numeric_limits<unsigned>::max();

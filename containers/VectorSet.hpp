@@ -61,7 +61,7 @@ class VectorSet {
         }
         _size = 0;
     }
-    inline size_t position(const size_t &vid) { return _index[vid]; }
+    inline size_t relabel(const size_t &vid) { return _index[vid]; }
 };
 
 const size_t VectorSet::NONE = std::numeric_limits<size_t>::max();
