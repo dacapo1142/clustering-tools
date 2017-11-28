@@ -25,7 +25,9 @@ int main(int argc, char *argv[]) {
     clusters.routine();
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
-    //output duration
+    //output the duration time
+    const char *time_filename = argv[3];
+    ofstream metadata(time_filename);
     duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
     metadata << time_span.count() << endl;
     metadata.close();
@@ -33,12 +35,8 @@ int main(int argc, char *argv[]) {
     //output outcome
     clusters.print_communities();
 
-    //output the duration time
-    const char *time_filename = argv[3];
-    ofstream metadata(time_filename);
-
     //output size of p-aggregate graph in each depth
-    ofstream file_size(argv[4])
+    ofstream file_size(argv[4]);
     clusters.print_size(file_size);
     file_size.close();
     
