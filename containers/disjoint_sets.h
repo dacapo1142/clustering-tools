@@ -40,20 +40,20 @@ class DisjointSets {
     // operations
     inline void _insert(unsigned v, unsigned new_cid,
                         std::vector<unsigned> &new_size);
-    void init_disjoint_sets();
-    void relabel_cid();
+    inline void init_disjoint_sets();
+    inline void relabel_cid();
     inline void print(std::ostream &os);
-    void assign(unsigned vid, unsigned cid);
-    auto operator[](unsigned cid) {
+    inline void assign(unsigned vid, unsigned cid);
+    inline auto operator[](unsigned cid) {
         return RangeWrapper<decltype(partition)::iterator>(
             partition.begin() + stored_range[cid], partition.begin() + stored_range[cid+1]);
     };
-    auto operator[](unsigned cid) const {
+    inline auto operator[](unsigned cid) const {
         return RangeWrapper<decltype(partition)::const_iterator>(
             partition.begin() + stored_range[cid], partition.begin() + stored_range[cid+1]);
     };
-    auto num_sets() const { return nonempty_set.size(); }
-    auto rearrange(const std::vector<double> &c_list);
+    inline auto num_sets() const { return nonempty_set.size(); }
+    inline auto rearrange(const std::vector<double> &c_list);
 };
 
 const unsigned DisjointSets::NONE = std::numeric_limits<unsigned>::max();

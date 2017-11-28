@@ -31,7 +31,7 @@ DisjointSets::DisjointSets(unsigned n, T cid_begin, T cid_end)
         }
 }
 
-void DisjointSets::assign(unsigned vid, unsigned cid) {
+inline void DisjointSets::assign(unsigned vid, unsigned cid) {
     unsigned old_cid = c_id[vid];
     // check if the cid is the original one
     if (old_cid == cid) {
@@ -47,20 +47,20 @@ void DisjointSets::assign(unsigned vid, unsigned cid) {
     }
 }
 
-void DisjointSets::_insert(unsigned v, unsigned new_cid,
+inline void DisjointSets::_insert(unsigned v, unsigned new_cid,
                            std::vector<unsigned> &new_size) {
     unsigned idx = stored_range[new_cid] + new_size[new_cid];
     partition[idx] = v;
     new_size[new_cid]++;
 }
 
-void DisjointSets::relabel_cid() {
+inline void DisjointSets::relabel_cid() {
     for (auto &cid : c_id) {
         cid = nonempty_set.relabel(cid);
     }
 }
 
-auto DisjointSets::rearrange(const std::vector<double> &c_list) {
+inline auto DisjointSets::rearrange(const std::vector<double> &c_list) {
     std::vector<double> new_pcc(num_sets());
     for(unsigned cid=0; cid<num_sets(); cid++){
         unsigned original_cid = nonempty_set.relabel_inv(cid);
@@ -70,7 +70,7 @@ auto DisjointSets::rearrange(const std::vector<double> &c_list) {
 }
 
 
-void DisjointSets::init_disjoint_sets() {
+inline void DisjointSets::init_disjoint_sets() {
     // initialize stored_range
     unsigned num_nonempty = nonempty_set.size();
     stored_range.resize(num_nonempty + 1);
