@@ -8,12 +8,11 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <numeric>
 #include <random>
 #include <set>
 #include <tuple>
 #include <vector>
-#include <numeric>
-
 
 class Clusters {
   public:
@@ -27,13 +26,11 @@ class Clusters {
         NodeInfo(unsigned _vid) : NodeInfo(_vid, 0.0) {}
     };
 
-    #ifndef VECTOR
-    template<typename T>    
-    using List = std::list<T>;
-    #else
-    template<typename T>    
-    using List = std::vector<T>;
-    #endif
+#ifndef VECTOR
+    template <typename T> using List = std::list<T>;
+#else
+    template <typename T> using List = std::vector<T>;
+#endif
     unsigned original_vcount;
     unsigned vcount;
     unsigned k;
@@ -44,8 +41,7 @@ class Clusters {
     std::vector<double> pcc_list;
     std::vector<double> pvv_list;
     std::vector<unsigned> which_supernode;
-    VectorSet nonempty_set;
-    DisjointSets sets;
+    DisjointSets disjoint_sets;
     unsigned seed;
     double total_weight;
     std::list<unsigned> size_record;
@@ -55,11 +51,8 @@ class Clusters {
              InputFormat inputformat = TWO_COLOUMN)
         : original_vcount(_vcount), vcount(_vcount), k(_k), adj_list(_vcount),
           pv_list(_vcount, 0.0), pc_list(_k, 0.0), pcc_list(_k, 0.0),
-          pvv_list(_vcount, 0.0), which_supernode(_vcount, 0), nonempty_set(_k),
-          sets(_vcount, _k), total_weight(0.0) {
-        // seed(std::chrono::system_clock::now().time_since_epoch().count())
-        nonempty_set.initial_full();
-
+          pvv_list(_vcount, 0.0), which_supernode(_vcount, 0),
+          disjoint_sets(_vcount), total_weight(0.0) {
         read_weighted_edgelist_undirected(file, inputformat);
     }
 
@@ -67,10 +60,9 @@ class Clusters {
              double lambda1)
         : original_vcount(_vcount), vcount(_vcount), k(_k), adj_list(_vcount),
           pv_list(_vcount, 0.0), pc_list(_k, 0.0), pcc_list(_k, 0.0),
-          pvv_list(_vcount, 0.0), which_supernode(_vcount, 0), nonempty_set(_k),
-          sets(_vcount, _k), total_weight(0.0) {
+          pvv_list(_vcount, 0.0), which_supernode(_vcount, 0),
+          disjoint_sets(_vcount), total_weight(0.0) {
         // seed(std::chrono::system_clock::now().time_since_epoch().count())
-        nonempty_set.initial_full();
 
         read_weighted_edgelist_undirected(file, lambda0, lambda1);
     }
@@ -81,7 +73,7 @@ class Clusters {
         if (vid1 == vid2) {
             total_weight += weight;
             pv_list[vid1] += weight;
-            unsigned cid1 = sets.which_cluster[vid1];
+            unsigned cid1 = disjoint_sets.c_id[vid1];
             pc_list[cid1] += weight;
             pcc_list[cid1] += weight;
             pvv_list[vid1] += weight;
@@ -91,8 +83,8 @@ class Clusters {
             adj_list[vid2].emplace_back(vid1, weight);
             pv_list[vid1] += weight;
             pv_list[vid2] += weight;
-            unsigned cid1 = sets.which_cluster[vid1];
-            unsigned cid2 = sets.which_cluster[vid2];
+            unsigned cid1 = disjoint_sets.c_id[vid1];
+            unsigned cid2 = disjoint_sets.c_id[vid2];
             pc_list[cid1] += weight;
             pc_list[cid2] += weight;
             if (cid1 == cid2) {
@@ -135,8 +127,8 @@ class Clusters {
             }
         }
 
-        std:iota(which_supernode.begin(), which_supernode.end(), 0);
-        
+    std:
+        iota(which_supernode.begin(), which_supernode.end(), 0);
     }
 
     void read_weighted_edgelist_undirected(std::istream &file, double lambda0,
@@ -175,7 +167,8 @@ class Clusters {
             }
         }
 
-        std:iota(which_supernode.begin(), which_supernode.end(), 0);
+    std:
+        iota(which_supernode.begin(), which_supernode.end(), 0);
     }
 
     bool partition_procedure(const PartitionMethod &method) {
@@ -190,14 +183,14 @@ class Clusters {
 
             for (unsigned vid = 0; vid < vcount; vid++) {
                 candidate_set.clear();
-                unsigned old_cid = sets.which_cluster[vid];
+                unsigned old_cid = disjoint_sets.c_id[vid];
 
                 // old cid should be listed on the first of the set
                 candidate_set.insert(old_cid);
                 weight_list[old_cid] = 0;
                 for (auto &vertex2 : adj_list[vid]) {
                     unsigned vid2 = vertex2.vid;
-                    unsigned cid = sets.which_cluster[vid2];
+                    unsigned cid = disjoint_sets.c_id[vid2];
 
                     if (!candidate_set.contain(cid)) {
                         candidate_set.insert(cid);
@@ -211,7 +204,7 @@ class Clusters {
                 unsigned best_cid = old_cid;
 
                 double best_correlation_measure = 0;
-                if (sets.size[old_cid] != 1) {
+                if (disjoint_sets.size[old_cid] != 1) {
                     best_correlation_measure =
                         weight_list[old_cid] - (pc_list[old_cid] - pv) * pv;
                 }
@@ -231,13 +224,9 @@ class Clusters {
                     continue;
                 }
 
-                if (sets.size[old_cid] == 1) {
-                    nonempty_set.erase(old_cid);
-                }
-
                 changed = true;
                 changed_once = true;
-                sets.move(vid, best_cid);
+                disjoint_sets.assign(vid, best_cid);
 
                 // P{uniform choice an edge, and first end is in cluster c}
                 pc_list[old_cid] -= pv_list[vid];
@@ -249,44 +238,43 @@ class Clusters {
             }
         }
         iter_record.push_back(round_count);
+
+        pc_list = disjoint_sets.rearrange(pc_list);
+        pcc_list = disjoint_sets.rearrange(pcc_list);
+        disjoint_sets.init_disjoint_sets();
+
         return changed_once;
     }
+
     template <typename T> void print_vector(T vec) {
         for (auto &v : vec) {
             std::cout << v << " ";
         }
         std::cout << "\n";
     }
+
     bool node_aggregation() { // O(m+n)
-        unsigned new_vcount = nonempty_set.size();
-        // VectorSet neighbor_set(new_vcount);
-        #ifndef VECTOR
+        unsigned new_vcount = disjoint_sets.nonempty_set.size();
+#ifndef VECTOR
         typedef std::add_pointer<NodeInfo>::type It;
         std::vector<std::tuple<It, It, unsigned>> entries(
             new_vcount, std::make_tuple(It(), It(), new_vcount + 1));
-        #else
+#else
         std::vector<std::tuple<unsigned, unsigned, unsigned>> entries(
-            new_vcount, std::make_tuple(unsigned(), unsigned(), new_vcount + 1));
-        #endif
+            new_vcount,
+            std::make_tuple(unsigned(), unsigned(), new_vcount + 1));
+#endif
         std::vector<List<NodeInfo>> new_adj_list(new_vcount);
-        std::vector<double> new_pv_list(new_vcount, 0.0);
-        std::vector<double> new_pcc_list(new_vcount, 0.0);
 
-        for (auto &cid1 : nonempty_set) {
-
-            unsigned new_vid1 = nonempty_set.position(cid1);
-            unsigned new_cid1 = new_vid1;
-            new_pcc_list[new_cid1] = pcc_list[cid1];
-            for (auto vid1 = sets.begin(cid1); vid1 != sets.end();
-                 vid1 = sets.next(vid1)) {
-                // neighbor_set.clear();
-                new_pv_list[new_vid1] += pv_list[vid1];
+        for (unsigned new_cid1 = 0; new_cid1 < disjoint_sets.num_sets();
+             new_cid1++) {
+            unsigned new_vid1 = new_cid1;
+            for (auto vid1 : disjoint_sets[new_cid1]) {
                 for (auto &vertex2 : adj_list[vid1]) {
                     unsigned vid2 = vertex2.vid;
-                    unsigned cid2 = sets.which_cluster[vid2];
-                    unsigned new_vid2 = nonempty_set.position(cid2);
-                    // !(vid1 >= vid2) -> avoid duplicate calculation
-                    // !(new_vid1 == new_vid2) -> same cluster
+                    unsigned new_vid2 = disjoint_sets.c_id[vid2];
+                    // !(new_vid1 > new_vid2) -> avoid duplicate calculation
+                    // !(new_vid1 == new_vid2) -> same cluster, skip
                     if (new_vid1 >= new_vid2) {
                         continue;
                     }
@@ -296,52 +284,41 @@ class Clusters {
                     if (std::get<2>(entries[new_vid2]) != new_vid1) {
                         new_adj_list[new_vid1].emplace_back(new_vid2);
                         new_adj_list[new_vid2].emplace_back(new_vid1);
-                        #ifndef VECTOR
+#ifndef VECTOR
                         entries[new_vid2] = std::make_tuple(
                             &new_adj_list[new_vid1].back(),
                             &new_adj_list[new_vid2].back(), new_vid1);
-                        #else
+#else
                         entries[new_vid2] = std::make_tuple(
-                            new_adj_list[new_vid1].size()-1,
-                            new_adj_list[new_vid2].size()-1, new_vid1);
-                        #endif
+                            new_adj_list[new_vid1].size() - 1,
+                            new_adj_list[new_vid2].size() - 1, new_vid1);
+#endif
                     }
                     auto it = entries[new_vid2];
-                    #ifndef VECTOR
+#ifndef VECTOR
                     std::get<0>(it)->weight += weight;
                     std::get<1>(it)->weight += weight;
-                    #else
-                    new_adj_list[new_vid1][std::get<0>(it)].weight+=weight;
-                    new_adj_list[new_vid2][std::get<1>(it)].weight+=weight;
-                    #endif
+#else
+                    new_adj_list[new_vid1][std::get<0>(it)].weight += weight;
+                    new_adj_list[new_vid2][std::get<1>(it)].weight += weight;
+#endif
                 }
             }
         }
-        std::vector<double> new_pc_list(new_pv_list);
-        std::vector<unsigned> new_which_cluster(new_vcount);
-        for (unsigned vid = 0; vid < new_vcount; vid++) {
-            new_which_cluster[vid] = vid;
-        }
-        pv_list = std::move(new_pv_list);
-        pc_list = std::move(new_pc_list);
-        pcc_list = std::move(new_pcc_list);
+
+        pv_list = pc_list;
         pvv_list = pcc_list;
         adj_list = std::move(new_adj_list);
 
         vcount = new_vcount;
-        DisjointSets new_sets(new_vcount, new_vcount, new_which_cluster.begin(),
-                              new_which_cluster.end());
 
         for (unsigned vid = 0; vid < original_vcount; vid++) {
             unsigned supernode_id = which_supernode[vid];
-            unsigned cid = sets.which_cluster[supernode_id];
-            which_supernode[vid] = nonempty_set.position(cid);
+            which_supernode[vid] = disjoint_sets.c_id[supernode_id];
         }
-        sets = std::move(new_sets);
-        VectorSet new_nonempty_set(new_vcount);
-        new_nonempty_set.initial_full();
-        nonempty_set = std::move(new_nonempty_set);
-        size_record.push_back(nonempty_set.size());
+
+        disjoint_sets = DisjointSets(new_vcount);
+        size_record.push_back(new_vcount);
         return true;
     }
 
@@ -357,16 +334,16 @@ class Clusters {
 
     void print() {
         for (unsigned vid = 0; vid < original_vcount; vid++) {
-            std::cout << sets.which_cluster[which_supernode[vid]] << " ";
+            std::cout << disjoint_sets.c_id[which_supernode[vid]] << " ";
         }
         std::cout << std::endl;
     }
 
     void print_communities(std::ostream &of = std::cout) {
 
-        DisjointSets s(original_vcount, nonempty_set.size(),
-                       which_supernode.begin(), which_supernode.end());
-        s.print(of);
+        DisjointSets s(original_vcount, which_supernode.begin(), which_supernode.end());
+        s.init_disjoint_sets();
+        std::cout<<s;
     }
 
     void print_size(std::ostream &f) {

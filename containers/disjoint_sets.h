@@ -1,6 +1,7 @@
 #ifndef DISJOINT_SETS_H
 #define DISJOINT_SETS_H
 
+#include "VectorSet.hpp"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -8,45 +9,63 @@
 #include <limits>
 #include <random>
 #include <vector>
-#include "VectorSet.hpp"
 
 class DisjointSets {
   public:
-  //iterator wrapper
-    template <typename T> class IterWrapper {
-        T &_v;
-        size_t _start;
-        size_t _end;
+    // iterator wrapper
+    template <typename T> class RangeWrapper {
+        T _start;
+        T _end;
       public:
-        IterWrapper(T &v, size_t start, size_t end)
-            : _v(v), _start(start), _end(end) {}
-        auto begin() { return _v.begin() + _start; }
-        auto end(){return _v.begin() + _end;}
-        auto size(){return _end-_start;}
+        RangeWrapper(T start, T end)
+            : _start(start), _end(end) {}
+        auto begin() { return _start; }
+        auto end() { return _end; }
     };
-    //member
+    // member
     static const unsigned NONE;
     unsigned _n;
     unsigned _k;
     std::vector<unsigned> size;
     std::vector<unsigned> c_id;
     VectorSet nonempty_set;
-    std::vector<unsigned> disjoint_set;
+    std::vector<unsigned> partition;
     std::vector<unsigned> stored_range;
-    std::vector<unsigned> new_size;
 
-    //opeartions
+    // constructors
     DisjointSets(unsigned n);
-    void init_disjoint_set();
-    inline void _insert(unsigned vid, unsigned cid);
+    DisjointSets(unsigned n, unsigned k);
+    template <typename T> DisjointSets(unsigned n, T cid_begin, T cid_end);
+
+    // operations
+    inline void _insert(unsigned v, unsigned new_cid,
+                        std::vector<unsigned> &new_size);
+    void init_disjoint_sets();
+    void relabel_cid();
     inline void print(std::ostream &os);
     void assign(unsigned vid, unsigned cid);
     auto operator[](unsigned cid) {
-      return IterWrapper<decltype(disjoint_set)>(disjoint_set, size[cid], size[cid+1]);
+        return RangeWrapper<decltype(partition)::iterator>(
+            partition.begin() + stored_range[cid], partition.begin() + stored_range[cid+1]);
     };
-    auto num_sets(){return nonempty_set.size();}
+    auto operator[](unsigned cid) const {
+        return RangeWrapper<decltype(partition)::const_iterator>(
+            partition.begin() + stored_range[cid], partition.begin() + stored_range[cid+1]);
+    };
+    auto num_sets() const { return nonempty_set.size(); }
+    auto rearrange(const std::vector<double> &c_list);
 };
 
 const unsigned DisjointSets::NONE = std::numeric_limits<unsigned>::max();
+std::ostream &operator<<(std::ostream &os, const DisjointSets &ds) {
+    for (unsigned i = 0; i < ds.num_sets(); i++) {
+        for (const auto &v : ds[i]) {
+            os << v << " ";
+        }
+        os<<"\n";
+    }
+    return os;
+}
+
 #include "disjoint_sets.cc"
 #endif
