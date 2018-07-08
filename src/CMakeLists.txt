@@ -1,0 +1,2 @@
+project(fastunfolding)
+add_executable(fastunfolding fastunfolding.cpp)
