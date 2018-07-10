@@ -27,7 +27,7 @@ parser.add_argument('-i', '--iter', metavar='FILE', dest='iter_file', type=str, 
                     help='record the number of iterations in each round to FILE')
                     
 parser.add_argument('-3c', '--three_column', dest='three_column', action='store_true', default=False,
-                    help='use three-column formation for bivariate distribution')
+                    help='use three-column format for the bivariate distribution')
 
 args = parser.parse_args()
 
