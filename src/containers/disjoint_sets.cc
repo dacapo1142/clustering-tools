@@ -1,131 +1,95 @@
 #include "disjoint_sets.h"
 #include <iostream>
+#include <numeric>
 
-template <typename T>
-DisjointSets::DisjointSets(unsigned n, unsigned k, T which_cluster_begin,
-                           T which_cluster_end)
-    : _n(n), _k(k), data(n), first(k, NONE), last(k, NONE), size(k, 0),
-      which_cluster(which_cluster_begin, which_cluster_end) {
-    assert(_n != NONE);
-    initial();
-}
-
-DisjointSets::DisjointSets(unsigned n, unsigned k, unsigned seed)
-    : _n(n), _k(k), _seed(seed), data(_n), first(_k, NONE), last(_k, NONE),
-      size(_n, 0), which_cluster(n) {
-    assert(_n != NONE);
-    random_assign();
-    initial();
+DisjointSets::DisjointSets(unsigned n)
+    : _n(n), _k(n), size(_k, 1), c_id(_n), nonempty_set(n) {
+    // each vertex is an individual community, hence c_id[i]=i
+    std::iota(c_id.begin(), c_id.end(), 0);
+    // nonempty set = V
+    nonempty_set.initial_full();
 }
 
 DisjointSets::DisjointSets(unsigned n, unsigned k)
-    : _n(n), _k(k),
-      _seed(std::chrono::system_clock::now().time_since_epoch().count()),
-      data(_n), first(_k, NONE), last(_k, NONE), size(_n, 0), which_cluster(n) {
-    assert(_n != NONE);
-    random_assign();
-    initial();
-}
-
-void DisjointSets::random_assign() {
-    std::vector<unsigned> vertice(_n);
-    for (unsigned i = 0; i < _n; i++) {
-        vertice[i] = i;
+    : _n(n), _k(k), size(_k, 1), c_id(_n), nonempty_set(_k) {
+    std::iota(c_id.begin(), c_id.end(), 0);
+    for (auto &v : c_id) {
+        v = v % k;
     }
-    // shuffle(vertice.begin(), vertice.end(),
-    //         std::default_random_engine(_seed));
-    for (unsigned i = 0; i < _n; i++) {
-        which_cluster[i] = vertice[i] % _k;
+    // nonempty set = {V}
+    for (unsigned v = 0; v < _k; v++) {
+        nonempty_set.insert(v);
     }
 }
 
-void DisjointSets::print(std::ostream &os) {
-    for (unsigned cid = 0; cid < _k; cid++) {
-        if (!empty(cid)) {
-            unsigned vid = first[cid];
-            while (vid != NONE) {
-                os << vid << " ";
-                vid = next(vid);
-            }
-            os << "\n";
+template <typename T>
+DisjointSets::DisjointSets(unsigned n, T cid_begin, T cid_end)
+    : _n(n), _k(n), size(_k, 0), c_id(cid_begin, cid_end), nonempty_set(n, cid_begin, cid_end) {
+        // update size
+        for(auto it=cid_begin; it!=cid_end; it++){
+            size[*it]++;
         }
-    }
 }
 
-void DisjointSets::insert(unsigned vid, unsigned cid) {
-    size[cid]++;
-    if (empty(cid)) {
-        first[cid] = vid;
-        last[cid] = vid;
-        data[vid].prev_id = NONE;
-        data[vid].next_id = NONE;
-    } else {
-        unsigned last_id = last[cid];
-        auto &last_node = data[last_id];
-        auto &new_node = data[vid];
-        last_node.next_id = vid;
-        new_node.prev_id = last_id;
-        new_node.next_id = NONE;
-        last[cid] = vid;
-    }
-}
-
-void DisjointSets::initial() {
-    for (unsigned vid = 0; vid < _n; vid++) {
-        unsigned cid = which_cluster[vid];
-        insert(vid, cid);
-    }
-}
-
-void DisjointSets::merge(unsigned cid1, unsigned cid2) {
-    if (cid1 > cid2) {
-        std::swap(cid1, cid2);
-    }
-
-    if (empty(cid2)) {
-        return;
-    }
-
-    size[cid1] += size[cid2];
-    size[cid2] = 0;
-
-    unsigned vid = first[cid2];
-    while (vid != NONE) {
-        which_cluster[vid] = cid1;
-        vid = next(vid);
-    }
-
-    unsigned first_cid2_index = first[cid2];
-    unsigned last_cid1_index = last[cid1];
-    first[cid2] = NONE;
-    data[last_cid1_index].next_id = first_cid2_index;
-    data[first_cid2_index].prev_id = last_cid1_index;
-
-    unsigned last_cid2_index = last[cid2];
-    last[cid2] = NONE;
-    last[cid1] = last_cid2_index;
-}
-
-void DisjointSets::move(unsigned vid, unsigned cid) {
-    unsigned old_cid = which_cluster[vid];
+inline void DisjointSets::assign(unsigned vid, unsigned cid) {
+    unsigned old_cid = c_id[vid];
+    // check if the cid is the original one
     if (old_cid == cid) {
         return;
     }
-    which_cluster[vid] = cid;
+    // update cluster index
+    c_id[vid] = cid;
+    // update cluster size
     size[old_cid]--;
-    unsigned prev_id = data[vid].prev_id;
-    unsigned next_id = data[vid].next_id;
-    if (prev_id != NONE) {
-        data[prev_id].next_id = next_id;
-    } else {
-        first[old_cid] = next_id;
+    size[cid]++;
+    if (size[old_cid] == 0) {
+        nonempty_set.erase(old_cid);
     }
-    if (next_id != NONE) {
-        data[next_id].prev_id = prev_id;
-    } else {
-        last[old_cid] = prev_id;
-    }
-    insert(vid, cid);
 }
 
-bool DisjointSets::empty(unsigned cid) { return last[cid] == NONE; }
+inline void DisjointSets::_insert(unsigned v, unsigned new_cid,
+                           std::vector<unsigned> &new_size) {
+    unsigned idx = stored_range[new_cid] + new_size[new_cid];
+    partition[idx] = v;
+    new_size[new_cid]++;
+}
+
+inline void DisjointSets::relabel_cid() {
+    for (auto &cid : c_id) {
+        cid = nonempty_set.relabel(cid);
+    }
+}
+
+inline auto DisjointSets::rearrange(const std::vector<double> &c_list) {
+    std::vector<double> new_pcc(num_sets());
+    for(unsigned cid=0; cid<num_sets(); cid++){
+        unsigned original_cid = nonempty_set.relabel_inv(cid);
+        new_pcc[cid] = c_list[original_cid];
+    }
+    return new_pcc;
+}
+
+
+inline void DisjointSets::init_disjoint_sets() {
+    // initialize stored_range
+    unsigned num_nonempty = nonempty_set.size();
+    stored_range.resize(num_nonempty + 1);
+    stored_range[0] = 0;
+    unsigned acc = 0;
+    for (auto &cid : nonempty_set) {
+        auto new_cid = nonempty_set.relabel(cid);
+        acc += size[cid];
+        stored_range[new_cid + 1] = acc;
+    }
+    // initialize the size array of disjoint set
+    std::vector<unsigned> new_size(num_nonempty);
+    std::fill(new_size.begin(), new_size.end(), 0);
+
+    partition.resize(_n);
+    for (unsigned v = 0; v < _n; v++) {
+        unsigned cid = c_id[v];
+        unsigned new_cid = nonempty_set.relabel(cid);
+        _insert(v, new_cid, new_size);
+    }
+    relabel_cid();
+}
